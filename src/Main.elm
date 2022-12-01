@@ -14,7 +14,7 @@ import Time.Extra as Time
 
 
 type Model
-    = Init { coffeeInGrams : String }
+    = Init { showErrorMessage : Bool, coffeeInGrams : String }
     | Countdown TimerModel
 
 
@@ -42,17 +42,19 @@ update msg model =
         CoffeeAmountChanged newCoffeeAmount ->
             case model of
                 Init { coffeeInGrams } ->
-                    ( Init { coffeeInGrams = newCoffeeAmount }
+                    ( Init
+                        { coffeeInGrams = newCoffeeAmount
+                        , showErrorMessage = False
+                        }
                     , Cmd.none
                     )
 
                 Countdown timerModel ->
-                    Debug.todo ""
+                    ( model, Cmd.none )
 
         Tick newTime ->
             case model of
                 Init _ ->
-                    -- TODO: fix impossible state
                     ( model, Cmd.none )
 
                 Countdown timerModel ->
@@ -66,7 +68,7 @@ update msg model =
                 Init { coffeeInGrams } ->
                     case coffeeInGrams |> String.toInt of
                         Nothing ->
-                            Debug.todo ""
+                            ( Init { coffeeInGrams = coffeeInGrams, showErrorMessage = True }, Cmd.none )
 
                         Just int ->
                             ( Countdown
@@ -98,10 +100,18 @@ view model =
         [ h1 [] [ text "Coffee app ☕️" ]
         , button [ onClick StartTimerButtonClicked ] [ text "Start" ]
         , case model of
-            Init { coffeeInGrams } ->
+            Init { coffeeInGrams, showErrorMessage } ->
                 div []
                     [ input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
-                    , coffeeInGrams |> String.toInt |> Maybe.map viewRecipe |> Maybe.withDefault (text "invalid")
+                    , div []
+                        [ text <|
+                            if showErrorMessage then
+                                "Invalid coffee amount"
+
+                            else
+                                ""
+                        ]
+                    , coffeeInGrams |> String.toInt |> Maybe.map viewRecipe |> Maybe.withDefault (text "")
                     ]
 
             Countdown { startTime, currentTime, coffeeInGrams } ->
@@ -141,7 +151,7 @@ viewRecipe coffeeInGrams =
 
 init : flags -> ( Model, Cmd Msg )
 init _ =
-    ( Init { coffeeInGrams = "" }, Cmd.none )
+    ( Init { coffeeInGrams = "", showErrorMessage = False }, Cmd.none )
 
 
 main : Program () Model Msg
