@@ -104,15 +104,18 @@ view model =
                     , coffeeInGrams |> String.toInt |> Maybe.map viewRecipe |> Maybe.withDefault (text "invalid")
                     ]
 
-            Countdown { startTime, currentTime } ->
+            Countdown { startTime, currentTime, coffeeInGrams } ->
                 let
                     elapsed =
                         Time.diff Time.Second Time.utc startTime currentTime
                 in
-                span []
-                    [ text (elapsed // 60 |> String.fromInt)
-                    , text ":"
-                    , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
+                div []
+                    [ span []
+                        [ text (elapsed // 60 |> String.fromInt)
+                        , text ":"
+                        , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
+                        ]
+                    , viewRecipe coffeeInGrams
                     ]
         ]
 
