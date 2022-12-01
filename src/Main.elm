@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Task
 import Time
 import Time.Extra as Time
@@ -14,13 +14,14 @@ import Time.Extra as Time
 
 
 type Model
-    = Init
+    = Init { coffeeInGrams : String }
     | Countdown TimerModel
 
 
 type alias TimerModel =
     { startTime : Time.Posix
     , currentTime : Time.Posix
+    , coffeeInGrams : Int
     }
 
 
@@ -31,25 +32,60 @@ type alias TimerModel =
 type Msg
     = Tick Time.Posix
     | StartTimerButtonClicked
-    | TimeNowReceived Time.Posix
+    | StartingTimeReceived Time.Posix
+    | CoffeeAmountChanged String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        CoffeeAmountChanged newCoffeeAmount ->
+            case model of
+                Init { coffeeInGrams } ->
+                    ( Init { coffeeInGrams = newCoffeeAmount }
+                    , Cmd.none
+                    )
+
+                Countdown timerModel ->
+                    Debug.todo ""
+
         Tick newTime ->
             case model of
-                Init ->
+                Init _ ->
+                    -- TODO: fix impossible state
                     ( model, Cmd.none )
 
                 Countdown timerModel ->
                     ( Countdown { timerModel | currentTime = newTime }, Cmd.none )
 
         StartTimerButtonClicked ->
-            ( model, Time.now |> Task.perform TimeNowReceived )
+            ( model, Time.now |> Task.perform StartingTimeReceived )
 
-        TimeNowReceived now ->
-            ( Countdown { startTime = now, currentTime = now }, Cmd.none )
+        StartingTimeReceived now ->
+            case model of
+                Init { coffeeInGrams } ->
+                    case coffeeInGrams |> String.toInt of
+                        Nothing ->
+                            Debug.todo ""
+
+                        Just int ->
+                            ( Countdown
+                                { startTime = now
+                                , currentTime = now
+                                , coffeeInGrams = int
+                                }
+                            , Cmd.none
+                            )
+
+                Countdown timerModel ->
+                    ( Countdown
+                        { startTime = now
+                        , currentTime = now
+                        , coffeeInGrams =
+                            timerModel.coffeeInGrams
+                        }
+                    , Cmd.none
+                    )
 
 
 
@@ -62,8 +98,8 @@ view model =
         [ h1 [] [ text "Coffee app ☕️" ]
         , button [ onClick StartTimerButtonClicked ] [ text "Start" ]
         , case model of
-            Init ->
-                text ""
+            Init { coffeeInGrams } ->
+                input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
 
             Countdown { startTime, currentTime } ->
                 let
@@ -84,7 +120,7 @@ view model =
 
 init : flags -> ( Model, Cmd Msg )
 init _ =
-    ( Init, Cmd.none )
+    ( Init { coffeeInGrams = "" }, Cmd.none )
 
 
 main : Program () Model Msg
