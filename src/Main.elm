@@ -99,7 +99,10 @@ view model =
         , button [ onClick StartTimerButtonClicked ] [ text "Start" ]
         , case model of
             Init { coffeeInGrams } ->
-                input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
+                div []
+                    [ input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
+                    , coffeeInGrams |> String.toInt |> Maybe.map viewRecipe |> Maybe.withDefault (text "invalid")
+                    ]
 
             Countdown { startTime, currentTime } ->
                 let
@@ -112,6 +115,11 @@ view model =
                     , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
                     ]
         ]
+
+
+viewRecipe : Int -> Html msg
+viewRecipe coffeeInGrams =
+    div [] [ text (String.fromFloat (toFloat coffeeInGrams / 1000.0 * 60) ++ "\u{1FAD8}") ]
 
 
 
