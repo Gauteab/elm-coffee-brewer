@@ -122,7 +122,17 @@ view model =
 
 viewRecipe : Int -> Html msg
 viewRecipe coffeeInGrams =
-    div [] [ text (String.fromFloat (toFloat coffeeInGrams / 1000.0 * 60) ++ "\u{1FAD8}") ]
+    let
+        beansInGrams =
+            toFloat coffeeInGrams / 1000.0 * 60
+    in
+    ol [ style "list-style" "none" ]
+        [ li [] [ text (String.fromFloat beansInGrams ++ "g \u{1FAD8}") ]
+        , li [] [ text (String.fromFloat (beansInGrams * 2) ++ "g 💧🌸") ]
+        , li [] [ text (String.fromFloat (toFloat coffeeInGrams * (300 / 800)) ++ "g 🌊") ]
+        , li [] [ text (String.fromFloat (toFloat coffeeInGrams * (500 / 800)) ++ "g 🌊") ]
+        , li [] [ text (String.fromFloat (toFloat coffeeInGrams) ++ "g 🌊") ]
+        ]
 
 
 
