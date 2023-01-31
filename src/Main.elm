@@ -169,11 +169,6 @@ main =
     Browser.element
         { init = init
         , update = update
-        , view = viewUnstyled
+        , view = view >> toUnstyled
         , subscriptions = \_ -> Time.every 1000.0 Tick
         }
-
-
-viewUnstyled : Model -> Html.Html Msg
-viewUnstyled model =
-    toUnstyled (view model)
