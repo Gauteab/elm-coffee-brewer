@@ -111,8 +111,6 @@ view model =
             ]
         ]
         [ h1 [] [ text "Coffee app ☕️" ]
-
-        --, button [ onClick StartTimerButtonClicked ] [ text "Start" ]
         , case model of
             Init { coffeeInGrams, showErrorMessage } ->
                 div []
@@ -134,11 +132,11 @@ view model =
                             else
                                 ""
                         ]
-                    , viewTimer 0
                     , coffeeInGrams
                         |> String.toInt
                         |> Maybe.map viewRecipe
                         |> Maybe.withDefault viewEmptyRecipe
+                    , viewTimer 0
                     ]
 
             Countdown { startTime, currentTime, coffeeInGrams } ->
@@ -147,25 +145,29 @@ view model =
                         Time.diff Time.Second Time.utc startTime currentTime
                 in
                 div []
-                    [ viewTimer elapsed
-                    , viewRecipe coffeeInGrams
+                    [ viewRecipe coffeeInGrams
+                    , viewTimer elapsed
                     ]
         ]
 
 
 viewTimer : Int -> Html Msg
 viewTimer elapsed =
-    button
-        [ onClick StartTimerButtonClicked
-        , Attributes.css
-            [ Css.backgroundColor Css.transparent
-            , Css.border Css.zero
-            , Css.fontSize (Css.rem 8)
+    div []
+        [ button
+            [ onClick StartTimerButtonClicked
+            , Attributes.css
+                [ Css.backgroundColor Css.transparent
+                , Css.border Css.zero
+                , Css.fontSize (Css.rem 8)
+                , Css.position Css.absolute
+                , Css.bottom (Css.rem 6)
+                ]
             ]
-        ]
-        [ text (elapsed // 60 |> String.fromInt)
-        , text ":"
-        , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
+            [ text (elapsed // 60 |> String.fromInt |> String.padLeft 2 '0')
+            , text ":"
+            , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
+            ]
         ]
 
 
