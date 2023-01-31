@@ -1,15 +1,22 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html
+import Html.Styled exposing (..)
+import Html.Styled.Attributes as Attributes exposing (..)
+import Html.Styled.Events exposing (..)
 import Task
 import Time
 import Time.Extra as Time
 
 
 
+{-
+   Mål for sesjonen:
+   - Label på input
+   - Vise når du skal gå til neste steg
+   - Finpusse
+-}
 --- MODEL ---
 
 
@@ -102,7 +109,10 @@ view model =
         , case model of
             Init { coffeeInGrams, showErrorMessage } ->
                 div []
-                    [ input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
+                    [ label [ Attributes.css [] ]
+                        [ text "Hallo?"
+                        , input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
+                        ]
                     , div []
                         [ text <|
                             if showErrorMessage then
@@ -159,6 +169,11 @@ main =
     Browser.element
         { init = init
         , update = update
-        , view = view
+        , view = viewUnstyled
         , subscriptions = \_ -> Time.every 1000.0 Tick
         }
+
+
+viewUnstyled : Model -> Html.Html Msg
+viewUnstyled model =
+    toUnstyled (view model)
