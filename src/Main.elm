@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Css
 import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as Attributes exposing (..)
@@ -103,17 +104,29 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div
+        [ Attributes.css
+            [ Css.width (Css.pct 80)
+            , Css.margin2 Css.zero Css.auto
+            ]
+        ]
         [ h1 [] [ text "Coffee app ☕️" ]
-        , button [ onClick StartTimerButtonClicked ] [ text "Start" ]
+
+        --, button [ onClick StartTimerButtonClicked ] [ text "Start" ]
         , case model of
             Init { coffeeInGrams, showErrorMessage } ->
                 div []
-                    [ label [ Attributes.css [] ]
-                        [ text "Hallo?"
+                    [ label
+                        [ Attributes.css
+                            [ Css.displayFlex
+                            , Css.flexDirection Css.column
+                            , Css.alignItems Css.flexStart
+                            ]
+                        ]
+                        [ text "Water (in grams)"
                         , input [ type_ "text", value coffeeInGrams, onInput CoffeeAmountChanged ] []
                         ]
-                    , div []
+                    , div [ Attributes.css [ Css.color (Css.hex "f00"), Css.marginTop (Css.px 4) ] ]
                         [ text <|
                             if showErrorMessage then
                                 "Invalid coffee amount"
@@ -121,7 +134,11 @@ view model =
                             else
                                 ""
                         ]
-                    , coffeeInGrams |> String.toInt |> Maybe.map viewRecipe |> Maybe.withDefault (text "")
+                    , viewTimer 0
+                    , coffeeInGrams
+                        |> String.toInt
+                        |> Maybe.map viewRecipe
+                        |> Maybe.withDefault viewEmptyRecipe
                     ]
 
             Countdown { startTime, currentTime, coffeeInGrams } ->
@@ -130,13 +147,25 @@ view model =
                         Time.diff Time.Second Time.utc startTime currentTime
                 in
                 div []
-                    [ span []
-                        [ text (elapsed // 60 |> String.fromInt)
-                        , text ":"
-                        , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
-                        ]
+                    [ viewTimer elapsed
                     , viewRecipe coffeeInGrams
                     ]
+        ]
+
+
+viewTimer : Int -> Html Msg
+viewTimer elapsed =
+    button
+        [ onClick StartTimerButtonClicked
+        , Attributes.css
+            [ Css.backgroundColor Css.transparent
+            , Css.border Css.zero
+            , Css.fontSize (Css.rem 8)
+            ]
+        ]
+        [ text (elapsed // 60 |> String.fromInt)
+        , text ":"
+        , text (elapsed |> modBy 60 |> String.fromInt |> String.padLeft 2 '0')
         ]
 
 
@@ -146,13 +175,52 @@ viewRecipe coffeeInGrams =
         beansInGrams =
             toFloat coffeeInGrams / 1000.0 * 60
     in
-    ol [ style "list-style" "none" ]
-        [ li [] [ text (String.fromFloat beansInGrams ++ "g \u{1FAD8}") ]
-        , li [] [ text (String.fromFloat (beansInGrams * 2) ++ "g 💧🌸") ]
-        , li [] [ text (String.fromFloat (toFloat coffeeInGrams * (300 / 800)) ++ "g 🌊") ]
-        , li [] [ text (String.fromFloat (toFloat coffeeInGrams * (500 / 800)) ++ "g 🌊") ]
-        , li [] [ text (String.fromFloat (toFloat coffeeInGrams) ++ "g 🌊") ]
+    viewRecipeHelper
+        { beansInGrams = String.fromInt (round beansInGrams) ++ " g"
+        , waterInGrams = String.fromInt (round (beansInGrams * 2)) ++ " g"
+        , pours =
+            [ String.fromInt (round (toFloat coffeeInGrams * (300 / 800))) ++ " g"
+            , String.fromInt (round (toFloat coffeeInGrams * (500 / 800))) ++ " g"
+            , String.fromInt (round (toFloat coffeeInGrams)) ++ " g"
+            ]
+        }
+
+
+viewRecipeHelper : { beansInGrams : String, waterInGrams : String, pours : List String } -> Html msg
+viewRecipeHelper record =
+    div
+        [ Attributes.css
+            [ Css.displayFlex
+            , Css.justifyContent Css.center
+            ]
         ]
+        [ ol
+            [ Attributes.css
+                [ Css.listStyle Css.none
+                , Css.textAlign Css.right
+                ]
+            ]
+            ([ li [] [ text (record.beansInGrams ++ " \u{1FAD8}") ]
+             , li [] [ text (record.waterInGrams ++ " 🌸") ]
+             ]
+                ++ (record.pours
+                        |> List.map (\pour -> li [] [ text (pour ++ " 🌊") ])
+                   )
+            )
+        ]
+
+
+viewEmptyRecipe : Html msg
+viewEmptyRecipe =
+    viewRecipeHelper
+        { beansInGrams = "--- "
+        , waterInGrams = "--- "
+        , pours =
+            [ "--- "
+            , "--- "
+            , "--- "
+            ]
+        }
 
 
 
